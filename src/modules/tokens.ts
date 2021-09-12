@@ -1,0 +1,29 @@
+export type TokenType =
+	| 'STRING'
+	| 'NUMBER'
+	| 'FUNCTION'
+	| 'IDENTIFIER'
+	| 'LEFT_PARENS'
+	| 'RIGHT_PARENS'
+	| 'COLON'
+	| 'COMMA'
+	| 'PLUS'
+	| 'MINUS'
+	| 'DIVIDE'
+	| 'MULTIPLY'
+	| 'EQUALS'
+	| 'EOF';
+
+export class Token {
+	public type: TokenType;
+	public value: string | null;
+
+	constructor(type: TokenType, value: string | null = null) {
+		this.type = type;
+		this.value = value;
+	}
+
+	print() {
+		return `${this.type}${this.value ? `:${this.value}` : ''}`;
+	}
+}
