@@ -1,7 +1,7 @@
 import readline from 'readline';
 
 type Listener = (line: string) => void;
-type Command = (reader: readline.Interface, ...args: any[]) => void;
+type Command = (reader: readline.Interface, ...args: string[]) => void;
 
 const commands = new Map<string, Command>();
 
@@ -28,7 +28,7 @@ export const registerCommand = (name: string, command: Command) => {
 	commands.set(name, command);
 };
 
-export default function emulate(prompt: string, listener?: Listener) {
+export default function cli(prompt: string, listener?: Listener) {
 	const reader = readline.createInterface({
 		input: process.stdin,
 		output: process.stdout,
@@ -38,7 +38,7 @@ export default function emulate(prompt: string, listener?: Listener) {
 	registerCommand('clear', () => console.clear());
 	registerCommand('exit', () => process.exit());
 
-	reader.on('line', function readline (line) {
+	reader.on('line', function readline(line) {
 		if (is_command(line)) {
 			prompt_after(reader, line, (line: string) => {
 				execute_command(reader, line);

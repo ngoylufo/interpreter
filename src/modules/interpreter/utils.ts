@@ -136,6 +136,7 @@ type KnownFunction = (...args: any[]) => any;
 const functions: GlobalFunctions = {
 	SUM: {
 		callback: (first: number, rest: number[]) => {
+			[first, ...rest].map(assert_number);
 			return rest.reduce((a, b) => a + b, first);
 		}
 	},
