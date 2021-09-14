@@ -15,8 +15,8 @@ export type TokenType =
 	| 'EOF';
 
 export class Token {
-	public type: TokenType;
-	public value: string | null;
+	readonly type: TokenType;
+	readonly value: string | null;
 
 	constructor(type: TokenType, value: string | null = null) {
 		this.type = type;

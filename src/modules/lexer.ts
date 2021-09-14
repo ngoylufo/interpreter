@@ -2,6 +2,17 @@ import { Token, TokenType } from './tokens';
 
 type LexFn = ((lexer: Lexer) => LexFn) | void;
 
+const symbols: Map<string, TokenType> = new Map([
+	['(', 'LEFT_PARENS'],
+	[')', 'RIGHT_PARENS'],
+	['+', 'PLUS'],
+	['-', 'MINUS'],
+	['*', 'MULTIPLY'],
+	['/', 'DIVIDE'],
+	[':', 'COLON'],
+	[',', 'COMMA']
+]);
+
 const lexText: LexFn = (lexer) => {
 	const character = lexer.next();
 
@@ -13,23 +24,19 @@ const lexText: LexFn = (lexer) => {
 	while (!lexer.eof()) {
 		value += lexer.next();
 	}
-	lexer.push('STRING', value);
-	lexer.push('EOF');
+	lexer.add(new Token('STRING', value));
+	lexer.add(new Token('EOF'));
 };
 
 const lexNextToken: LexFn = (lexer) => {
 	const character = lexer.next();
 
-	if (character === undefined && lexer.eof()) {
-		return lexer.push('EOF');
-	}
-
 	if (/\s/.test(character)) {
 		return lexNextToken;
 	}
 
-	if ('"' === character) {
-		return lexString;
+	if (character === '"') {
+		return lexStringToken;
 	}
 
 	if ('( + - : , / * )'.includes(character)) {
@@ -44,55 +51,34 @@ const lexNextToken: LexFn = (lexer) => {
 		return lexIdentifierToken;
 	}
 
-	throw new Error(`Unexpected character: "${character}".`);
+	if (character === undefined && lexer.eof()) {
+		lexer.add(new Token('EOF'));
+	} else {
+		throw new Error(`Unexpected character: "${character}"`);
+	}
 };
 
-const lexString: LexFn = (lexer) => {
+const lexStringToken: LexFn = (lexer) => {
 	let value = lexer.next();
 	while (!lexer.eof() && lexer.peek() !== '"') {
 		value += lexer.next();
 	}
-	lexer.push('STRING', value);
+	lexer.add(new Token('STRING', value));
 	lexer.consume('"');
 	return lexNextToken;
 };
 
 const lexSymbolToken: LexFn = (lexer) => {
 	const character = lexer.current();
+	const tokenType = symbols.get(character);
 
-	if (character === '(') {
-		lexer.push('LEFT_PARENS');
+	if (tokenType) {
+		return lexer.add(new Token(tokenType)), lexNextToken;
 	}
 
-	if (character === ')') {
-		lexer.push('RIGHT_PARENS');
-	}
-
-	if (character === ':') {
-		lexer.push('COLON');
-	}
-
-	if (character === ',') {
-		lexer.push('COMMA');
-	}
-
-	if (character === '+') {
-		lexer.push('PLUS');
-	}
-
-	if (character === '-') {
-		lexer.push('MINUS');
-	}
-
-	if (character === '/') {
-		lexer.push('DIVIDE');
-	}
-
-	if (character === '*') {
-		lexer.push('MULTIPLY');
-	}
-
-	return lexNextToken;
+	throw new Error(
+		`Unexpected character: Expected a symbol but got "${character}"`
+	);
 };
 
 const lexNumberToken: LexFn = (lexer) => {
@@ -103,18 +89,22 @@ const lexNumberToken: LexFn = (lexer) => {
 	}
 
 	if (value.endsWith('.')) {
-		throw new Error(`Lexing Error: Badly formatted number: "${value}".`);
+		throw new Error(`Badly formatted number: "${value}"`);
 	}
 
-	return lexer.push('NUMBER', value), lexNextToken;
+	lexer.add(new Token('NUMBER', value));
+	return lexNextToken;
 };
 
 const lexIdentifierToken: LexFn = (lexer) => {
 	let value = lexer.current();
+
 	while (!lexer.eof() && /[A-Z0-9]/.test(lexer.peek())) {
 		value += lexer.next();
 	}
-	return lexer.push('IDENTIFIER', value), lexNextToken;
+
+	lexer.add(new Token('IDENTIFIER', value));
+	return lexNextToken;
 };
 
 export default class Lexer {
@@ -126,26 +116,29 @@ export default class Lexer {
 		this.source = source;
 	}
 
-	peek(): string {
-		return this.source[this.index];
-	}
-
 	next(): string {
 		return this.source[this.index++];
+	}
+
+	peek(offset: number = 0): string {
+		return this.source[this.index + offset];
 	}
 
 	current(): string {
 		return this.source[this.index - 1];
 	}
 
-	push(type: TokenType, value: string | null = null) {
-		this.tokens.push(new Token(type, value));
+	consume(expected: string): void {
+		const character = this.next();
+		if (character !== expected) {
+			throw new Error(
+				`Unexpected character: Expected "${expected}" but got "${character}"`
+			);
+		}
 	}
 
-	consume(next: string) {
-		if (this.next() !== next) {
-			throw new Error(`Expected "${next}" but got "${this.current()}"`);
-		}
+	add(token: Token): void {
+		this.tokens.push(token);
 	}
 
 	eof(): boolean {
