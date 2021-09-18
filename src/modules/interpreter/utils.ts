@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { unfold } from '../../tools/utils';
 
-import {
+import type {
 	BinaryNode,
 	CallNode,
 	CellNode,
@@ -53,7 +54,7 @@ function expects<T>(
 
 function assert<T>(type: TypeOfTag, a: unknown, error: string): asserts a is T {
 	if (typeof a !== type) {
-		throw new Error(`Expected a number, but got "${a}".`);
+		throw new Error(error);
 	}
 }
 
@@ -168,7 +169,7 @@ const functions: GlobalFunctions = {
 	CONCATENATE: {
 		callback: (first: string, rest: string[]): string => {
 			[first, ...rest].map(assert_string);
-			return [first, ...rest].join("");
+			return [first, ...rest].join('');
 		}
 	}
 };
@@ -195,19 +196,20 @@ const parse_range = (left: string, right: string): CellNode[] => {
 		return [remove(/\d+/), +remove(/[A-Z]+/)];
 	};
 
-	const convert = (value: number | string): number | string => {
-		if (typeof value === 'number') {
-			return String.fromCodePoint(value + 65);
-		}
-		return value.codePointAt(0)! - 65;
+	const fromCodePoint = (point: number): string => {
+		return String.fromCodePoint(point);
+	};
+
+	const toCodePoint = (character: string): number => {
+		return character.codePointAt(0) as number;
 	};
 
 	const [col_1, row_1] = split(left);
 	const [col_2, row_2] = split(right);
 
 	const columns = unfold(
-		([s, e]) => (s > e ? null : [convert(s) as string, [++s, e]]),
-		[convert(col_1) as number, convert(col_2) as number]
+		([s, e]) => (s > e ? null : [fromCodePoint(s), [++s, e]]),
+		[toCodePoint(col_1), toCodePoint(col_2)]
 	);
 
 	const rows = unfold(

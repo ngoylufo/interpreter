@@ -1,7 +1,7 @@
 import { Node, AST, NumberNode, StringNode, GroupNode, CallNode } from './ast';
 import { Token, TokenType } from './tokens';
 
-type ParseFn = ((parser: Parser) => ParseFn) | void;
+// type ParseFn = ((parser: Parser) => ParseFn) | void;
 
 const parseExpression = (parser: Parser): Node => {
 	return parseTerm(parser);

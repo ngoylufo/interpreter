@@ -120,7 +120,7 @@ export default class Lexer {
 		return this.source[this.index++];
 	}
 
-	peek(offset: number = 0): string {
+	peek(offset = 0): string {
 		return this.source[this.index + offset];
 	}
 

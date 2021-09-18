@@ -5,7 +5,7 @@ type Serializer = (args: never[]) => string;
 export const memoize = <T extends Callable>(
 	callback: T,
 	serializer: Serializer = JSON.stringify
-) => {
+): T => {
 	const cache: { [x: string]: unknown } = {};
 
 	return ((...args: never[]) => {
@@ -16,7 +16,7 @@ export const memoize = <T extends Callable>(
 
 type UnfoldCallback<A, B> = (a: A) => [B, A] | null;
 
-export const unfold = <A, B>(fn: UnfoldCallback<A, B>, seed: A) => {
+export const unfold = <A, B>(fn: UnfoldCallback<A, B>, seed: A): B[] => {
 	const accumulated: B[] = [];
 	let result = fn(seed);
 

@@ -23,7 +23,7 @@ export class Token {
 		this.value = value;
 	}
 
-	print() {
+	print(): string {
 		return `${this.type}${this.value ? `:${this.value}` : ''}`;
 	}
 }

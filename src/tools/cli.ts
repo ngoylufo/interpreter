@@ -24,11 +24,11 @@ const prompt_after = (
 	return callback(line.trim()), reader.prompt();
 };
 
-export const registerCommand = (name: string, command: Command) => {
+export const registerCommand = (name: string, command: Command): void => {
 	commands.set(name, command);
 };
 
-export default function cli(prompt: string, listener?: Listener) {
+export default function cli(prompt: string, listener?: Listener): void {
 	const reader = readline.createInterface({
 		input: process.stdin,
 		output: process.stdout,

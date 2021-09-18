@@ -15,7 +15,7 @@ The project comes with a very bare bones interactive shell. Having ran the `dev`
 command, you should see a prompt that loops like this:
 
 ```sh
-(SFI) $ 
+(SFI) $
 ```
 
 ### Formulas
