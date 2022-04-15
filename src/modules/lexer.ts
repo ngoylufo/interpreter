@@ -73,7 +73,8 @@ const lexSymbolToken: LexFn = (lexer) => {
 	const tokenType = symbols.get(character);
 
 	if (tokenType) {
-		return lexer.add(new Token(tokenType)), lexNextToken;
+		lexer.add(new Token(tokenType));
+		return lexNextToken;
 	}
 
 	throw new Error(

@@ -11,9 +11,17 @@ const is_command = (line: string) => {
 };
 
 const execute_command = (reader: readline.Interface, line: string) => {
-	const [name, ...args] = line.trim().split(' ') ?? [];
-	const command = commands.get(name);
-	command && command(reader, ...args);
+	const names = [...commands.keys()].join('|');
+	const regex = RegExp(`(?<command>(${names}))( (?<input>([\\S\\s]+)))?`);
+	const matches = regex.exec(line);
+
+	if (matches && matches.groups) {
+		const { groups } = matches;
+		const command = commands.get(groups.command);
+		command && command(reader, groups.input);
+	} else {
+		console.log('poopoo');
+	}
 };
 
 const prompt_after = (
