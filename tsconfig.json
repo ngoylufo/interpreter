@@ -1,24 +1,30 @@
 {
+	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts"],
 	"compilerOptions": {
+		"lib": ["es2022"],
+		"target": "es2022",
 		"baseUrl": ".",
-		"outDir": "./dist",
-		"lib": ["es2020"],
-		"sourceMap": true,
-
+		"rootDir": "src",
+		"typeRoots": ["./node_modules/@types", "./src/ambient.d.ts"],
 		"paths": {
-			"$tools": ["src/tools"],
-			"$tools/*": ["src/tools/*"]
+			"$utils": ["src/utils/utils.ts"],
+			"$cli": ["src/utils/cli.ts"],
+			"$channels": ["src/utils/channels.ts"]
 		},
-
-		"importHelpers": true,
-
-		"declaration": true,
-		"declarationDir": "./dist/types",
-
-		"strict": true,
 		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"noEmitOnError": true,
+		"noErrorTruncation": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"stripInternal": true,
+		"strict": true,
+		"noUnusedLocals": true,
 		"noImplicitReturns": true,
+		"noUnusedParameters": true,
+		"downlevelIteration": true,
 		"noFallthroughCasesInSwitch": true
-	},
-	"include": ["src/**/*.d.ts", "src/**/*.ts"]
+	}
 }

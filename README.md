@@ -4,11 +4,14 @@ A very basic spreadsheet formula interpreter.
 
 ## Running the project
 
-Just clone the repo and install the dependencies.
+This project uses `pnpm` as its package manager, with the minimum required version being 7.13. Install/Upgrade your local copy of `pnpm` if necessary. To run the project in dev mode use:
+
+Just clone the repo, install the dependencies and run it
 
 ```sh
-yarn # or npm install
-yarn dev # or npm run dev
+pnpm install
+pnpm build
+pnpm start
 ```
 
 The project comes with a very bare bones interactive shell. Having ran the `dev`
