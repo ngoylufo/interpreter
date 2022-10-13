@@ -9,8 +9,8 @@ import {
 import Lexer, { LexerError } from "../lexer";
 import Parser, { ParseError } from "../parser";
 
-type Cell = { name: string; formula: string };
-type Cells = Map<string, Cell>;
+export type Cell = { name: string; formula: string };
+export type Cells = Map<string, Cell>;
 
 class RuntimeError extends CustomError {}
 
@@ -22,7 +22,9 @@ const FUNCTIONS = {
 	TIMESTAMP: {
 		validate: async (_: Interpreter, args: Parser.CallNode["args"]) => {
 			if (args.length > 0) {
-				throw new RuntimeError('TIMESTAMP is not a function, it cannot take arguments');
+				throw new RuntimeError(
+					"TIMESTAMP is not a function, it cannot take arguments"
+				);
 			}
 			return [];
 		},
@@ -33,7 +35,9 @@ const FUNCTIONS = {
 	DATE: {
 		validate: (_: Interpreter, args: Parser.CallNode["args"]) => {
 			if (args.length > 0) {
-				throw new RuntimeError('DATE is not a function, it cannot take arguments');
+				throw new RuntimeError(
+					"DATE is not a function, it cannot take arguments"
+				);
 			}
 			return [];
 		},
@@ -44,7 +48,9 @@ const FUNCTIONS = {
 	SUM: {
 		validate: (interpreter: Interpreter, args: Parser.CallNode["args"]) => {
 			if (args.length < 1) {
-				throw new RuntimeError(`SUM expects at least 1 argument, got ${args.length}`);
+				throw new RuntimeError(
+					`SUM expects at least 1 argument, got ${args.length}`
+				);
 			}
 			return evaluate_args(interpreter, args);
 		},
@@ -53,6 +59,22 @@ const FUNCTIONS = {
 				throw new RuntimeError("SUM expected a number");
 			}
 			return (args as number[]).reduce((a, b) => a + b);
+		}
+	},
+	LEN: {
+		validate: (interpreter: Interpreter, args: Parser.CallNode["args"]) => {
+			if (args.length !== 1) {
+				throw new RuntimeError(
+					`LEN expects exactly 1 argument, but got ${args.length}`
+				);
+			}
+			return evaluate_args(interpreter, args);
+		},
+		call: (args: Awaited<ReturnType<typeof evaluate>>[]) => {
+			if (args.find((a) => typeof a !== "string")) {
+				throw new RuntimeError("LEN expects a string");
+			}
+			return (args as string[]).reduce((a, b) => a + b.length, 0);
 		}
 	}
 };
@@ -301,15 +323,18 @@ export default class Interpreter {
 
 		try {
 			const program = await parser.parse(chan);
-			return evaluate(this, program.body);
+			return await evaluate(this, program.body);
 		} catch (error: unknown) {
 			if (error instanceof ParseError) {
 				const line = report_lexeme(source, error.lexeme);
-				return console.log(`\n${error.name}: ${error.message}${line}`);
+				return console.log(`${error.name}: ${error.message}${line}`);
 			}
 			if (error instanceof LexerError) {
 				const line = report_source(source, error.index);
-				return console.log(`\n${error.name}: ${error.message}${line}`);
+				return console.log(`${error.name}: ${error.message}${line}`);
+			}
+			if (error instanceof RuntimeError) {
+				return console.log(`${error.name}: ${error.message}`);
 			}
 			throw new Error("Unknown error occurred.", { cause: error });
 		}
