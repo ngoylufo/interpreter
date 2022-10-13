@@ -1,0 +1,9 @@
+# Ignore NodeJS and editor folders
+node_modules
+.vscode
+
+# Ignore files for PNPM, NPM and YARN
+pnpm-lock.yaml
+
+# Build files
+main.js*
