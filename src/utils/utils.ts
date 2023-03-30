@@ -1,11 +1,11 @@
 export class CustomError extends Error {
-	constructor(message: string) {
-		super(message);
+	constructor(message: string, { cause }: { cause?: unknown } = {}) {
+		super(message, { cause });
 		this.name = this.constructor.name;
 	}
 }
 
-export type UnfoldCallback<A, B> = (a: A) => ([B, A] | null);
+export type UnfoldCallback<A, B> = (a: A) => [B, A] | null;
 
 export const unfold = <A, B>(fn: UnfoldCallback<A, B>, seed: A): B[] => {
 	const accumulated: B[] = [];
@@ -18,7 +18,6 @@ export const unfold = <A, B>(fn: UnfoldCallback<A, B>, seed: A): B[] => {
 
 	return accumulated;
 };
-
 
 export const report_lexeme = (source: string, lexeme: Lexer.Lexeme) => {
 	const start = lexeme.idx > 25 ? lexeme.idx - 25 : 0;

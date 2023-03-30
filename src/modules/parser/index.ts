@@ -1,6 +1,7 @@
-import * as utils from "./utils";
 import type Channel from "$channels";
+
 import { CustomError } from "$utils";
+import * as utils from "./utils";
 
 const IDENTIFIERS = ["DATE", "TIMESTAMP"];
 const CONSTANTS = ["PI"];
@@ -8,8 +9,12 @@ const CONSTANTS = ["PI"];
 export class ParseError extends CustomError {
 	lexeme: Lexer.Lexeme;
 
-	constructor(lexeme: Lexer.Lexeme, message: string) {
-		super(message);
+	constructor(
+		lexeme: Lexer.Lexeme,
+		message: string,
+		{ cause }: { cause?: unknown } = {}
+	) {
+		super(message, { cause });
 		this.lexeme = lexeme;
 	}
 }
@@ -94,7 +99,9 @@ const parse_factor = async (parser: Parser): Promise<Parser.Node> => {
 					const type = error.message.split(" ").reverse().at(0)!;
 					invalid_range_end(left.type, type);
 				}
-				throw new ParseError(parser.current(), "Unknown Error During Parsing");
+				throw new ParseError(parser.current(), "Unknown Error During Parsing", {
+					cause: error
+				});
 			}
 		}
 
@@ -107,7 +114,9 @@ const parse_factor = async (parser: Parser): Promise<Parser.Node> => {
 					const type = error.message.split(" ").reverse().at(0)!;
 					invalid_range_end(left.type, type);
 				}
-				throw new ParseError(parser.current(), "Unknown Error During Parsing");
+				throw new ParseError(parser.current(), "Unknown Error During Parsing", {
+					cause: error
+				});
 			}
 		}
 
@@ -198,7 +207,7 @@ const parse_primary = async (parser: Parser): Promise<Parser.Node> => {
 
 	if (await parser.expects("IDENTIFIER")) {
 		const { value: name } = await parser.consume("IDENTIFIER");
-		
+
 		return { type: "Identifier", name: name as string };
 	}
 

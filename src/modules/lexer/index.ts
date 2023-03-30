@@ -1,7 +1,7 @@
-import { CustomError } from "$utils";
 import type Channel from "$channels";
+import { CustomError } from "$utils";
 
-type LexFn = void | ((lexer: Lexer) => Promise<LexFn> | void);
+type LexFn = void | ((lexer: Lexer) => Promise<LexFn>);
 
 const symbols: Map<string, Lexer.LexemeType> = new Map([
 	["(", "LEFT_PARENS"],
@@ -170,7 +170,10 @@ export default class Lexer {
 
 	async lex(chan: Channel<Lexer.Lexeme>, source: string) {
 		let lex: LexFn = lex_text;
-		(this.source = source), (this.chan = chan), (this.idx = 0);
+
+		this.source = source;
+		this.chan = chan;
+		this.idx = 0;
 
 		while (lex) {
 			lex = await lex(this);

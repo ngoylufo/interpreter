@@ -108,7 +108,7 @@ type Types =
 
 function assert<T>(type: Types, value: unknown): asserts value is T {
 	if (typeof value !== type) {
-		throw new Error(`Unexpected type ${typeof value}, expected ${type}`);
+		throw new RuntimeError(`Unexpected type ${typeof value}, expected ${type}`);
 	}
 }
 
@@ -143,8 +143,16 @@ const evaluate = async (
 			return evaluate_identifier(interpreter, node);
 	}
 
-	console.log(node);
-	throw new Error("Oops");
+	if (node.type === "Range") {
+		const left = await evaluate(interpreter, node.left);
+		const right = await evaluate(interpreter, node.right);
+
+		throw new RuntimeError(
+			`Unexpected ${node.type} ${left}:${right}.` +
+				"\n	Ranges can only be used as arguments to functions."
+		);
+	}
+	throw new RuntimeError("Unknown error");
 };
 
 const evaluate_cell = async (
@@ -274,7 +282,7 @@ const evaluate_call = async (
 const evaluate_constant = async (_: Interpreter, node: Parser.ConstantNode) => {
 	const value = CONSTANTS[node.name as keyof typeof CONSTANTS];
 	if (value === undefined) {
-		throw new RuntimeError(`Name ${node.name} not found`);
+		throw new RuntimeError(`Unknown identifier "${node.name}".`);
 	}
 	return value;
 };
@@ -285,30 +293,32 @@ const evaluate_identifier = async (
 ) => {
 	const value = interpreter.identifier(node.name);
 	if (value === undefined) {
-		throw new RuntimeError(`Name ${node.name} not found`);
+		throw new RuntimeError(`Unknown identifier "${node.name}"`);
 	}
 	return value;
 };
 
+type Identifiers = Map<string, number | string>;
+
 export default class Interpreter {
-	private names: Map<string, number | string>;
+	private identifiers: Identifiers;
 	private cells: Cells;
 
-	constructor(cells: Cells = new Map()) {
+	constructor(cells: Cells = new Map(), identifiers: Identifiers = new Map()) {
 		this.cells = cells;
-		this.names = new Map();
+		this.identifiers = identifiers;
 	}
 
 	cell(name: string): Cell {
 		const cell = this.cells.get(name);
 		if (cell === undefined) {
-			throw new RuntimeError(`Cell ${name} does not exist`);
+			throw new RuntimeError(`Unknown cell "${name}".`);
 		}
 		return cell;
 	}
 
 	identifier(name: string): number | string | undefined {
-		return this.names.get(name);
+		return this.identifiers.get(name);
 	}
 
 	async run(source: string): Promise<ReturnType<typeof evaluate> | void> {
@@ -319,24 +329,29 @@ export default class Interpreter {
 		lexer.lex(chan, source).catch((error: LexerError) => {
 			const line = report_source(source, error.index);
 			console.log(`${error.name}: ${error.message}${line}`);
+			error.cause && console.log(error.cause);
 		});
 
 		try {
-			const program = await parser.parse(chan);
-			return await evaluate(this, program.body);
+			return parser.parse(chan).then((program) => {
+				return evaluate(this, program.body);
+			});
 		} catch (error: unknown) {
 			if (error instanceof ParseError) {
 				const line = report_lexeme(source, error.lexeme);
-				return console.log(`${error.name}: ${error.message}${line}`);
+				console.log(`${error.name}: ${error.message}${line}`);
+				return void (error.cause && console.log(error.cause));
 			}
 			if (error instanceof LexerError) {
 				const line = report_source(source, error.index);
-				return console.log(`${error.name}: ${error.message}${line}`);
+				console.log(`${error.name}: ${error.message}${line}`);
+				return void (error.cause && console.log(error.cause));
 			}
 			if (error instanceof RuntimeError) {
-				return console.log(`${error.name}: ${error.message}`);
+				console.log(`${error.name}: ${error.message}`);
+				return void (error.cause && console.log(error.cause));
 			}
-			throw new Error("Unknown error occurred.", { cause: error });
+			throw new RuntimeError("Unknown error.", { cause: error });
 		}
 	}
 }
