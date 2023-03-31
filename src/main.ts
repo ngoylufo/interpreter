@@ -27,6 +27,8 @@ registerCommand("tokens", async (_, source) => {
 		const lexeme = await chan.pop();
 		lexemes.push(lexeme);
 	}
+
+	console.log(lexemes);
 });
 
 cli("(SFI) $ ", async function line(source: string): Promise<void> {

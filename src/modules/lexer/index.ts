@@ -34,13 +34,13 @@ const lex_text: LexFn = async (lexer) => {
 		return lex_next_token;
 	}
 
-	await lexer.add({ type: "TEXT", value: lexer.dump() });
-	return void (await lexer.add({ type: "EOF" }));
+	await lexer.add("TEXT", lexer.dump());
+	return void (await lexer.add("EOF"));
 };
 
 const lex_next_token: LexFn = async (lexer) => {
 	if (!lexer.peek(0) && lexer.eof()) {
-		return void (await lexer.add({ type: "EOF" }));
+		return void (await lexer.add("EOF"));
 	}
 
 	if (lexer.peek(0).match(/\s/) && lexer.consume()) {
@@ -72,7 +72,7 @@ const lex_string_token = async (lexer: Lexer) => {
 		value += lexer.next();
 	}
 	lexer.consume('"');
-	await lexer.add({ type: "STRING", value });
+	await lexer.add("STRING", value);
 	return lex_next_token;
 };
 
@@ -80,7 +80,7 @@ const lex_symbol_token = async (lexer: Lexer) => {
 	const type = symbols.get(lexer.current());
 
 	if (type) {
-		await lexer.add({ type });
+		await lexer.add(type);
 		return lex_next_token;
 	}
 
@@ -93,7 +93,7 @@ const lex_number_token = async (lexer: Lexer) => {
 		value += lexer.next();
 	}
 
-	await lexer.add({ type: "NUMBER", value: parseFloat(value) });
+	await lexer.add("NUMBER", value);
 	return lex_next_token;
 };
 
@@ -102,7 +102,7 @@ const lex_identifier_token = async (lexer: Lexer) => {
 	while (!lexer.eof() && lexer.peek(0).match(/[_a-zA-Z0-9]/)) {
 		value += lexer.next();
 	}
-	await lexer.add({ type: "IDENTIFIER", value });
+	await lexer.add("IDENTIFIER", value);
 	return lex_next_token;
 };
 
@@ -130,9 +130,7 @@ export default class Lexer {
 			const min = this.idx ? -this.idx : this.idx;
 			const max = this.idx + (this.source.length - this.idx);
 
-			throw Error(
-				`Lexer peek offset ${offset} out of bounds. Should be between ${min} and ${max}`
-			);
+			throw Error(`Lexer peek offset ${offset} out of bounds. Should be between ${min} and ${max}`);
 		}
 
 		return this.source[index];
@@ -150,13 +148,14 @@ export default class Lexer {
 		return character;
 	}
 
-	async add(lexeme: Omit<Lexer.Lexeme, "idx" | "length">): Promise<void> {
-		if (lexeme.type === "EOF") {
-			await this.chan.push({ idx: this.idx, length: 0, ...lexeme });
+	async add(type: Lexer.LexemeType, value?: string): Promise<void> {
+		if (type === "EOF") {
+			await this.chan.push({ idx: this.idx, length: 0, type, value });
 			return this.chan.close();
 		}
-		const length = `${lexeme.value}`.length;
-		await this.chan.push({ idx: this.idx - length, length, ...lexeme });
+
+		const length = value ? `${value}`.length : 1;
+		await this.chan.push({ idx: this.idx - length, length, type, value });
 	}
 
 	eof(): boolean {

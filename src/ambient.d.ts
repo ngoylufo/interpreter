@@ -24,7 +24,7 @@ declare namespace Lexer {
 		idx: number;
 		length: number;
 		type: LexemeType;
-		value?: number | string;
+		value?: string;
 	};
 }
 
